@@ -1,0 +1,22 @@
+{
+    "name": "plugin-usrbg",
+    "version": "1.0.0",
+    "description": "Allows you to USRBG banners.",
+    "main": "USRBG.plugin.js",
+    "scripts": {
+      "format": "prettier --write \"./*.js\""
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/BleedingBD/plugin-USRBG.git"
+    },
+    "author": "Qb",
+    "license": "Unlicense",
+    "bugs": {
+      "url": "https://github.com/BleedingBD/plugin-USRBG/issues"
+    },
+    "homepage": "https://github.com/BleedingBD/plugin-USRBG#readme",
+    "devDependencies": {
+      "prettier": "^2.8.7"
+    }
+  }
