@@ -4,11 +4,12 @@
  * @author Qb
  * @authorId 133659541198864384
  * @authorLink https://github.com/BleedingBD/
- * @version 1.0.0
+ * @version 1.1.0
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-USRBG/blob/main/USRBG.plugin.js
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-USRBG/main/USRBG.plugin.js
  */
+const USRBG_ORIGINAL_PREMIUM_TYPE = Symbol('USRBG_ORIGINAL_PREMIUM_TYPE');
 module.exports = class USRBG {
     constructor(meta) {
         this.meta = meta;
@@ -19,10 +20,10 @@ module.exports = class USRBG {
         this.replyBar = this.getModuleAndKey(Filters.byStrings('.shouldMention', '.showMentionToggle'));
     }
 
-    getModuleAndKey(filter) {
+    getModuleAndKey(filter, options) {
         const { getModule } = this.api.Webpack;
         let module;
-        const value = getModule((e, m) => (filter(e) ? (module = m) : false), { searchExports: true });
+        const value = getModule((e, m) => (filter(e) ? (module = m) : false), options || { searchExports: true });
         if (!module) return;
         return [module.exports, Object.keys(module.exports).find((k) => module.exports[k] === value)];
     }
@@ -30,8 +31,10 @@ module.exports = class USRBG {
     async start() {
         const {
             Patcher,
-            Webpack: { Filters },
+            Webpack: { Filters, getModule },
         } = this.api;
+
+        const PremiumChecker = getModule((m) => m?.isPremiumAtLeast);
 
         const database = await this.getDatabase();
 
@@ -47,12 +50,26 @@ module.exports = class USRBG {
             const { img } = database.get(props.user.id);
 
             displayProfile.banner = img;
+
+            // This property is a getter, so this is the proper way to access it after overwriting it.
+            Object.defineProperty(
+                displayProfile,
+                USRBG_ORIGINAL_PREMIUM_TYPE,
+                Object.getOwnPropertyDescriptor(displayProfile.__proto__, 'premiumType'),
+            );
+
             Object.defineProperty(displayProfile, 'premiumType', {
                 get: () => 2,
                 configurable: true,
             });
+            Object.defineProperty(displayProfile, 'canUsePremiumProfileCustomization', {
+                get: function () {
+                    return PremiumChecker.isPremiumAtLeast(this[USRBG_ORIGINAL_PREMIUM_TYPE], 2);
+                },
+                configurable: true,
+            });
 
-            this.innerPatcher.after(displayProfile, 'getBannerURL', (_thisArg, [props], ret) => {
+            this.innerPatcher.after(displayProfile, 'getBannerURL', () => {
                 return img;
             });
         });
