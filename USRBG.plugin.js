@@ -2,9 +2,10 @@
  * @name USRBG
  * @description Allows you to USRBG banners.
  * @author Qb
+ *         Tropical
  * @authorId 133659541198864384
  * @authorLink https://github.com/BleedingBD/
- * @version 1.1.0
+ * @version 1.1.1
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-USRBG/blob/main/USRBG.plugin.js
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-USRBG/main/USRBG.plugin.js
@@ -31,14 +32,14 @@ module.exports = class USRBG {
     async start() {
         const {
             Patcher,
-            Webpack: { Filters, getModule },
+            Webpack: { Filters, getModule, getByKeys },
         } = this.api;
 
         const PremiumChecker = getModule((m) => m?.isPremiumAtLeast);
 
         const database = await this.getDatabase();
 
-        const ProfileBanner = this.getModuleAndKey(Filters.byStrings('.displayProfile', '.bannerSrc'));
+        const ProfileBanner = this.getModuleAndKey(Filters.byStrings('darkenOnHover:'));
 
         Patcher.before(...ProfileBanner, (_thisArg, [props]) => {
             if (!props?.user?.id || !props?.displayProfile) return;
@@ -76,6 +77,22 @@ module.exports = class USRBG {
 
         Patcher.after(...ProfileBanner, (_thisArg, [props]) => {
             this.innerPatcher.unpatchAll();
+        });
+
+        const UserAvatar = getByKeys(
+            "UserPopoutBadgeList",
+            "UserPopoutAvatar",
+        );
+
+        Patcher.before(UserAvatar, "default", (_thisArg, [props]) => {
+            if (!props?.user?.id || !props?.displayProfile) return;
+
+            const { user, displayProfile } = props;
+
+            if (!database.has(user.id)) return;
+            const { img } = database.get(props.user.id);
+
+            displayProfile.banner = img;
         });
     }
 
