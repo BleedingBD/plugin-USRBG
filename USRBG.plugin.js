@@ -5,12 +5,13 @@
  *         Tropical
  * @authorId 133659541198864384
  * @authorLink https://github.com/BleedingBD/
- * @version 1.1.1
+ * @version 1.1.2
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-USRBG/blob/main/USRBG.plugin.js
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-USRBG/main/USRBG.plugin.js
  */
 const USRBG_ORIGINAL_PREMIUM_TYPE = Symbol('USRBG_ORIGINAL_PREMIUM_TYPE');
+const USRBG_ORIGINAL_BANNER = Symbol('USRBG_ORIGINAL_BANNER');
 module.exports = class USRBG {
     constructor(meta) {
         this.meta = meta;
@@ -92,7 +93,13 @@ module.exports = class USRBG {
             if (!database.has(user.id)) return;
             const { img } = database.get(props.user.id);
 
+            displayProfile[USRBG_ORIGINAL_BANNER] = displayProfile.banner;
             displayProfile.banner = img;
+        });
+
+        Patcher.after(UserAvatar, "default", (_thisArg, [props]) => {
+            displayProfile.banner = displayProfile[USRBG_ORIGINAL_BANNER];
+            delete displayProfile[USRBG_ORIGINAL_BANNER];
         });
     }
 
