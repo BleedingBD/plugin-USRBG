@@ -1,6 +1,6 @@
 /**
  * @name USRBG
- * @description Allows you to USRBG banners.
+ * @description Allows you to view USRBG banners.
  * @author Qb
  *         Tropical
  * @authorId 133659541198864384
@@ -12,6 +12,7 @@
  */
 const USRBG_ORIGINAL_PREMIUM_TYPE = Symbol('USRBG_ORIGINAL_PREMIUM_TYPE');
 const USRBG_ORIGINAL_BANNER = Symbol('USRBG_ORIGINAL_BANNER');
+const cachebust = Date.now();
 module.exports = class USRBG {
     constructor(meta) {
         this.meta = meta;
@@ -47,10 +48,9 @@ module.exports = class USRBG {
 
             const { user, displayProfile } = props;
 
-            if (!database.has(user.id)) return;
+            if (!database.users.has(user.id)) return;
 
-            const { img } = database.get(props.user.id);
-
+            const img = this.getImageUrl(database, user.id)
             displayProfile.banner = img;
 
             // This property is a getter, so this is the proper way to access it after overwriting it.
@@ -90,8 +90,8 @@ module.exports = class USRBG {
 
             const { user, displayProfile } = props;
 
-            if (!database.has(user.id)) return;
-            const { img } = database.get(props.user.id);
+            if (!database.users.has(user.id)) return;
+            const img = this.getImageUrl(database, props.user.id);
 
             displayProfile[USRBG_ORIGINAL_BANNER] = displayProfile.banner;
             displayProfile.banner = img;
@@ -103,11 +103,19 @@ module.exports = class USRBG {
         });
     }
 
+    getImageUrl(database, userId) {
+        const { endpoint, bucket, prefix } = database;
+        return `${endpoint}/${bucket}/${prefix}${userId}?${cachebust}`;
+    }
+
     async getDatabase() {
-        const json = await fetch('https://raw.githubusercontent.com/Discord-Custom-Covers/usrbg/master/dist/usrbg.json').then((r) =>
+        const json = await fetch('https://usrbg.is-hardly.online/users').then((r) =>
             r.json(),
         );
-        return new Map(json.map((e) => [e.uid, e]));
+        return {
+            ...json,
+            users: new Set(json.users)
+        }
     }
 
     stop() {
