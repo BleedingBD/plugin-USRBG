@@ -12,7 +12,6 @@
  */
 const USRBG_ORIGINAL_PREMIUM_TYPE = Symbol('USRBG_ORIGINAL_PREMIUM_TYPE');
 const USRBG_ORIGINAL_BANNER = Symbol('USRBG_ORIGINAL_BANNER');
-const cachebust = Date.now();
 module.exports = class USRBG {
     constructor(meta) {
         this.meta = meta;
@@ -105,7 +104,7 @@ module.exports = class USRBG {
 
     getImageUrl(database, userId) {
         const { endpoint, bucket, prefix } = database;
-        return `${endpoint}/${bucket}/${prefix}${userId}?${cachebust}`;
+        return `${endpoint}/${bucket}/${prefix}${userId}?${database.users.get(userId)}`;
     }
 
     async getDatabase() {
@@ -114,7 +113,7 @@ module.exports = class USRBG {
         );
         return {
             ...json,
-            users: new Set(json.users)
+            users: new Map(Object.entries(json.users))
         }
     }
 
