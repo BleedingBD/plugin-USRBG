@@ -1,25 +1,24 @@
 /**
  * @name USRBG
  * @description Allows you to view USRBG banners.
- * @author Qb
- *         Tropical
+ * @author Qb, katlyn, Tropical
  * @authorId 133659541198864384
  * @authorLink https://github.com/BleedingBD/
- * @version 1.1.2
+ * @version 1.2.0
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-USRBG/blob/main/USRBG.plugin.js
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-USRBG/main/USRBG.plugin.js
  */
-const USRBG_ORIGINAL_PREMIUM_TYPE = Symbol('USRBG_ORIGINAL_PREMIUM_TYPE');
-const USRBG_ORIGINAL_BANNER = Symbol('USRBG_ORIGINAL_BANNER');
+const USRBG_ORIGINAL_PREMIUM_TYPE = Symbol("USRBG_ORIGINAL_PREMIUM_TYPE");
+const USRBG_ORIGINAL_BANNER = Symbol("USRBG_ORIGINAL_BANNER");
 module.exports = class USRBG {
     constructor(meta) {
         this.meta = meta;
         this.api = new BdApi(meta.name);
-        this.innerPatcher = new BdApi(this.meta.name + ' Inner Patcher').Patcher;
+        this.innerPatcher = new BdApi(this.meta.name + " Inner Patcher").Patcher;
 
         const { Filters } = this.api.Webpack;
-        this.replyBar = this.getModuleAndKey(Filters.byStrings('.shouldMention', '.showMentionToggle'));
+        this.replyBar = this.getModuleAndKey(Filters.byStrings(".shouldMention", ".showMentionToggle"));
     }
 
     getModuleAndKey(filter, options) {
@@ -40,7 +39,7 @@ module.exports = class USRBG {
 
         const database = await this.getDatabase();
 
-        const ProfileBanner = this.getModuleAndKey(Filters.byStrings('darkenOnHover:'));
+        const ProfileBanner = this.getModuleAndKey(Filters.byStrings("darkenOnHover:"));
 
         Patcher.before(...ProfileBanner, (_thisArg, [props]) => {
             if (!props?.user?.id || !props?.displayProfile) return;
@@ -49,28 +48,28 @@ module.exports = class USRBG {
 
             if (!database.users.has(user.id)) return;
 
-            const img = this.getImageUrl(database, user.id)
+            const img = this.getImageUrl(database, user.id);
             displayProfile.banner = img;
 
             // This property is a getter, so this is the proper way to access it after overwriting it.
             Object.defineProperty(
                 displayProfile,
                 USRBG_ORIGINAL_PREMIUM_TYPE,
-                Object.getOwnPropertyDescriptor(displayProfile.__proto__, 'premiumType'),
+                Object.getOwnPropertyDescriptor(displayProfile.__proto__, "premiumType"),
             );
 
-            Object.defineProperty(displayProfile, 'premiumType', {
+            Object.defineProperty(displayProfile, "premiumType", {
                 get: () => 2,
                 configurable: true,
             });
-            Object.defineProperty(displayProfile, 'canUsePremiumProfileCustomization', {
+            Object.defineProperty(displayProfile, "canUsePremiumProfileCustomization", {
                 get: function () {
                     return PremiumChecker.isPremiumAtLeast(this[USRBG_ORIGINAL_PREMIUM_TYPE], 2);
                 },
                 configurable: true,
             });
 
-            this.innerPatcher.after(displayProfile, 'getBannerURL', () => {
+            this.innerPatcher.after(displayProfile, "getBannerURL", () => {
                 return img;
             });
         });
@@ -79,10 +78,7 @@ module.exports = class USRBG {
             this.innerPatcher.unpatchAll();
         });
 
-        const UserAvatar = getByKeys(
-            "UserPopoutBadgeList",
-            "UserPopoutAvatar",
-        );
+        const UserAvatar = getByKeys("UserPopoutBadgeList", "UserPopoutAvatar");
 
         Patcher.before(UserAvatar, "default", (_thisArg, [props]) => {
             if (!props?.user?.id || !props?.displayProfile) return;
@@ -108,13 +104,11 @@ module.exports = class USRBG {
     }
 
     async getDatabase() {
-        const json = await fetch('https://usrbg.is-hardly.online/users').then((r) =>
-            r.json(),
-        );
+        const json = await fetch("https://usrbg.is-hardly.online/users").then((r) => r.json());
         return {
             ...json,
-            users: new Map(Object.entries(json.users))
-        }
+            users: new Map(Object.entries(json.users)),
+        };
     }
 
     stop() {
